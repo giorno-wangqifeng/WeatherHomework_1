@@ -7,8 +7,10 @@ class Weather:
         self.api_key = api_key
         self.city = city
         self.base_url = "http://api.openweathermap.org/data/2.5/weather"
+        self.aqi_url = "http://api.openweathermap.org/data/2.5/air_pollution"
 
     def get_weather_data(self):
+        """获取当前天气数据"""
         params = {
             "q": self.city,
             "appid": self.api_key,
@@ -21,7 +23,30 @@ class Weather:
             print(f"Error: Unable to fetch weather data. Status code: {response.status_code}")
             return None
 
+    def get_aqi_data(self):
+        """获取空气质量指数（AQI）"""
+        # 获取当前天气数据以获取经纬度
+        weather_data = self.get_weather_data()
+        if not weather_data:
+            return None
+
+        lat = weather_data["coord"]["lat"]
+        lon = weather_data["coord"]["lon"]
+
+        params = {
+            "lat": lat,
+            "lon": lon,
+            "appid": self.api_key
+        }
+        response = requests.get(self.aqi_url, params=params)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"Error: Unable to fetch AQI data. Status code: {response.status_code}")
+            return None
+
     def display_weather(self):
+        """展示当前天气信息"""
         data = self.get_weather_data()
         if data:
             city = data["name"]
@@ -38,7 +63,20 @@ class Weather:
 
             self.plot_weather_data(temperature, humidity)
 
+    def display_aqi(self):
+        """展示空气质量指数（AQI）"""
+        aqi_data = self.get_aqi_data()
+        if aqi_data:
+            aqi = aqi_data["list"][0]["main"]["aqi"]
+            components = aqi_data["list"][0]["components"]
+            print("\nAir Quality Index (AQI):")
+            print(f"AQI: {aqi}")
+            print("Components:")
+            for key, value in components.items():
+                print(f"{key}: {value}")
+
     def plot_weather_data(self, temperature, humidity):
+        """绘制温度和湿度的柱状图"""
         labels = ["Temperature (°C)", "Humidity (%)"]
         values = [temperature, humidity]
 
