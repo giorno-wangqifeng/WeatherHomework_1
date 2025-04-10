@@ -7,7 +7,7 @@ class Weather:
         self.api_key = api_key
         self.city = city
         self.base_url = "http://api.openweathermap.org/data/2.5/weather"
-        self.aqi_url = "http://api.openweathermap.org/data/2.5/air_pollution"
+        self.forecast_url = "http://api.openweathermap.org/data/2.5/forecast"
 
     def get_weather_data(self):
         """获取当前天气数据"""
@@ -23,26 +23,18 @@ class Weather:
             print(f"Error: Unable to fetch weather data. Status code: {response.status_code}")
             return None
 
-    def get_aqi_data(self):
-        """获取空气质量指数（AQI）"""
-        # 获取当前天气数据以获取经纬度
-        weather_data = self.get_weather_data()
-        if not weather_data:
-            return None
-
-        lat = weather_data["coord"]["lat"]
-        lon = weather_data["coord"]["lon"]
-
+    def get_forecast_data(self):
+        """获取未来几天的天气预报"""
         params = {
-            "lat": lat,
-            "lon": lon,
-            "appid": self.api_key
+            "q": self.city,
+            "appid": self.api_key,
+            "units": "metric"
         }
-        response = requests.get(self.aqi_url, params=params)
+        response = requests.get(self.forecast_url, params=params)
         if response.status_code == 200:
             return response.json()
         else:
-            print(f"Error: Unable to fetch AQI data. Status code: {response.status_code}")
+            print(f"Error: Unable to fetch forecast data. Status code: {response.status_code}")
             return None
 
     def display_weather(self):
@@ -63,17 +55,29 @@ class Weather:
 
             self.plot_weather_data(temperature, humidity)
 
-    def display_aqi(self):
-        """展示空气质量指数（AQI）"""
-        aqi_data = self.get_aqi_data()
-        if aqi_data:
-            aqi = aqi_data["list"][0]["main"]["aqi"]
-            components = aqi_data["list"][0]["components"]
-            print("\nAir Quality Index (AQI):")
-            print(f"AQI: {aqi}")
-            print("Components:")
-            for key, value in components.items():
-                print(f"{key}: {value}")
+    def display_forecast(self):
+        """展示未来几天的天气预报"""
+        forecast_data = self.get_forecast_data()
+        if forecast_data:
+            print("\nWeather Forecast for the next few days:")
+            # 提取未来几天的天气数据
+            forecast_list = forecast_data["list"]
+            forecast_days = {}
+            for forecast in forecast_list:
+                date = forecast["dt_txt"].split(" ")[0]  # 提取日期部分
+                if date not in forecast_days:
+                    forecast_days[date] = []
+                forecast_days[date].append({
+                    "time": forecast["dt_txt"].split(" ")[1],
+                    "description": forecast["weather"][0]["description"],
+                    "temperature": forecast["main"]["temp"]
+                })
+
+            # 打印每天的天气预报
+            for date, forecasts in forecast_days.items():
+                print(f"\n{date}:")
+                for forecast in forecasts:
+                    print(f"  {forecast['time']}: {forecast['description']}, Temperature: {forecast['temperature']}°C")
 
     def plot_weather_data(self, temperature, humidity):
         """绘制温度和湿度的柱状图"""
