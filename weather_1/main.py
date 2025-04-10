@@ -6,7 +6,7 @@ def main():
 
     weather = Weather(api_key, city)
     weather.display_weather()
-    weather.display_forecast()
+    weather.display_alerts()
 
 if __name__ == "__main__":
     main()

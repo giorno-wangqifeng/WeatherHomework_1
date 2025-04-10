@@ -60,7 +60,6 @@ class Weather:
         forecast_data = self.get_forecast_data()
         if forecast_data:
             print("\nWeather Forecast for the next few days:")
-            # 提取未来几天的天气数据
             forecast_list = forecast_data["list"]
             forecast_days = {}
             for forecast in forecast_list:
@@ -78,6 +77,26 @@ class Weather:
                 print(f"\n{date}:")
                 for forecast in forecasts:
                     print(f"  {forecast['time']}: {forecast['description']}, Temperature: {forecast['temperature']}°C")
+
+    def display_alerts(self):
+        """展示天气预警信息"""
+        forecast_data = self.get_forecast_data()
+        if forecast_data:
+            alerts = []
+            for forecast in forecast_data["list"]:
+                weather_description = forecast["weather"][0]["description"]
+                if "rain" in weather_description or "thunderstorm" in weather_description:
+                    alerts.append({
+                        "time": forecast["dt_txt"],
+                        "description": weather_description
+                    })
+
+            if alerts:
+                print("\nWeather Alerts:")
+                for alert in alerts:
+                    print(f"{alert['time']}: {alert['description']}")
+            else:
+                print("\nNo weather alerts at the moment.")
 
     def plot_weather_data(self, temperature, humidity):
         """绘制温度和湿度的柱状图"""
