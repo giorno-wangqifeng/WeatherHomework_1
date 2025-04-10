@@ -8,6 +8,7 @@ class Weather:
         self.city = city
         self.base_url = "http://api.openweathermap.org/data/2.5/weather"
         self.forecast_url = "http://api.openweathermap.org/data/2.5/forecast"
+        self.aqi_url = "http://api.openweathermap.org/data/2.5/air_pollution"
 
     def get_weather_data(self):
         """获取当前天气数据"""
@@ -37,6 +38,20 @@ class Weather:
             print(f"Error: Unable to fetch forecast data. Status code: {response.status_code}")
             return None
 
+    def get_aqi_data(self, lat, lon):
+        """获取空气质量指数（AQI）"""
+        params = {
+            "lat": lat,
+            "lon": lon,
+            "appid": self.api_key
+        }
+        response = requests.get(self.aqi_url, params=params)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"Error: Unable to fetch AQI data. Status code: {response.status_code}")
+            return None
+
     def display_weather(self):
         """展示当前天气信息"""
         data = self.get_weather_data()
@@ -54,6 +69,11 @@ class Weather:
             print(f"Wind Speed: {wind_speed} m/s")
 
             self.plot_weather_data(temperature, humidity)
+
+            # 获取经纬度并显示 AQI
+            lat = data["coord"]["lat"]
+            lon = data["coord"]["lon"]
+            self.display_aqi(lat, lon)
 
     def display_forecast(self):
         """展示未来几天的天气预报"""
@@ -97,6 +117,18 @@ class Weather:
                     print(f"{alert['time']}: {alert['description']}")
             else:
                 print("\nNo weather alerts at the moment.")
+
+    def display_aqi(self, lat, lon):
+        """展示空气质量指数（AQI）"""
+        aqi_data = self.get_aqi_data(lat, lon)
+        if aqi_data:
+            aqi = aqi_data["list"][0]["main"]["aqi"]
+            components = aqi_data["list"][0]["components"]
+            print("\nAir Quality Index (AQI):")
+            print(f"AQI: {aqi}")
+            print("Components:")
+            for key, value in components.items():
+                print(f"{key}: {value}")
 
     def plot_weather_data(self, temperature, humidity):
         """绘制温度和湿度的柱状图"""
